@@ -1,0 +1,32 @@
+.dashboard-grid {
+  display: grid;
+  gap: 1.2rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.stat-label {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.stat-value {
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  font-weight: 800;
+}
+
+.stat-sub {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.info-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}

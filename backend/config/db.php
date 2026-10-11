@@ -1,5 +1,5 @@
 <?php
-// Conexión sencilla a MySQL (XAMPP) - estilo similar a application.properties
+// Conexión sencilla a MySQL (XAMPP)
 header("Content-Type: application/json; charset=utf-8");
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");

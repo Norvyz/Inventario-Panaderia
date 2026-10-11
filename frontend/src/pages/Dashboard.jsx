@@ -1,39 +1,48 @@
 import { useEffect, useState } from 'react';
 import { dashboardAPI } from '../services/api';
-import { useAuth } from '../hooks/useAuth';
-import { Link } from 'react-router-dom';
+import Layout from '../components/Layout';
+import './Dashboard.css';
 
 export default function Dashboard() {
-  const { user, logout } = useAuth();
   const [res, setRes] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    dashboardAPI.resumen().then(r => setRes(r.data.data)).catch(() => {});
+    dashboardAPI
+      .resumen()
+      .then((r) => setRes(r.data.data))
+      .catch(() => setRes(null))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
-    <div style={{ padding: 20 }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <h2>Panadería - Inventario</h2>
-        <div>
-          {user?.nombre} ({user?.rol}) 
-          <button onClick={logout} style={{ marginLeft: 8 }}>Salir</button>
-        </div>
-      </header>
-      <nav style={{ margin: '10px 0', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        <Link to="/insumos">Insumos</Link>
-        <Link to="/ventas">Ventas</Link>
-        <Link to="/gastos">Gastos</Link>
-        <Link to="/reportes">Reportes</Link>
-      </nav>
-      {res && (
-        <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-          <div>Ventas: ${res.total_ventas.toFixed(2)}</div>
-          <div>Gastos: ${res.total_gastos.toFixed(2)}</div>
-          <div>Ganancias: ${res.ganancias.toFixed(2)}</div>
-          <div>Stock bajo: {res.insumos_stock_bajo}</div>
-        </div>
-      )}
-    </div>
+    <Layout title="Dashboard" subtitle="Visión general de ventas, gastos, ganancias y stock.">
+      <section className="dashboard-grid">
+        <article className="card stat-card">
+          <span className="stat-label">Total Ventas</span>
+          <span className="stat-value">${(res?.total_ventas || 0).toFixed(2)}</span>
+          <span className="stat-sub">Suma de todas las ventas registradas</span>
+        </article>
+        <article className="card stat-card">
+          <span className="stat-label">Total Gastos</span>
+          <span className="stat-value">${(res?.total_gastos || 0).toFixed(2)}</span>
+          <span className="stat-sub">Gastos registrados por categoría</span>
+        </article>
+        <article className="card stat-card">
+          <span className="stat-label">Ganancias</span>
+          <span className="stat-value">${(res?.ganancias || 0).toFixed(2)}</span>
+          <span className="stat-sub">Ventas - Gastos</span>
+        </article>
+        <article className="card stat-card">
+          <span className="stat-label">Insumos con stock bajo</span>
+          <span className="stat-value">{res?.insumos_stock_bajo || 0}</span>
+          <span className="stat-sub">Igual o menor al stock mínimo</span>
+        </article>
+      </section>
+      <section className="card info-card">
+        <h2>Accesos rápidos</h2>
+        <p className="page-subtitle">Gestiona tu inventario desde las secciones del menú.</p>
+      </section>
+    </Layout>
   );
 }
