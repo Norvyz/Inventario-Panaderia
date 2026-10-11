@@ -118,3 +118,10 @@ INSERT IGNORE INTO roles (nombre) VALUES ('Administrador'), ('Cajero'), ('Almac√
 INSERT IGNORE INTO categorias_gasto (nombre) VALUES ('Arriendo'), ('Servicios'), ('Luz'), ('Agua'), ('Gas'), ('Transporte'), ('Otros');
 INSERT IGNORE INTO usuarios (nombre, correo, clave_hash, id_rol) VALUES
 ('Admin Demo', 'admin@panaderia.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1); -- password: password
+
+-- Productos demo para ventas
+INSERT IGNORE INTO productos (codigo, nombre, precio_venta, activo) VALUES
+('PAN-001', 'Pan Franc√©s', 2500.00, 1),
+('PAN-002', 'Mogolla', 2000.00, 1),
+('PAN-003', 'Rosca', 3000.00, 1),
+('PAN-004', 'Bollito', 1500.00, 1);
