@@ -1,6 +1,6 @@
 <?php
-require_once '../config/db.php';
-require_once '../services/VentaService.php';
+require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../services/VentaService.php';
 
 $pdo = getConnection();
 $svc = new VentaService($pdo);

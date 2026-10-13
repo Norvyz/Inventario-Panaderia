@@ -1,6 +1,6 @@
 <?php
-require_once '../config/db.php';
-require_once '../services/InsumoService.php';
+require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../services/InsumoService.php';
 
 $pdo = getConnection();
 $svc = new InsumoService($pdo);

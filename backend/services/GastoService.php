@@ -1,5 +1,5 @@
 <?php
-require_once '../models/GastoModel.php';
+require_once __DIR__ . '/../models/GastoModel.php';
 
 class GastoService {
     private $model;

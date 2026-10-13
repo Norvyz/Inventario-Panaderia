@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost/panaderia/controllers'; // Ajustar ruta según tu XAMPP
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost/panaderia/controllers';
 
 const api = axios.create({
   baseURL: API_URL,

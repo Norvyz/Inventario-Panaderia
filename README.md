@@ -46,3 +46,14 @@ define('DB_PASS','');
 
 ## Documentación completa
 Ver `docs/README_DOCS.md`
+
+## Despliegue en Render (servidor gratis)
+Ver guía completa en `docs/DESPLIEGUE_RENDER.md`.
+
+Resumen:
+- **Frontend**: Render Static Site (Root `frontend`, build `npm run build`, publish `dist`)
+- **Backend**: Render Web Service con **Docker** (`backend/Dockerfile`), porque Render no corre PHP nativo
+- **Base de datos**: Render NO da MySQL gratis → usar un MySQL gratuito externo (db4free.net, Aiven, TiDB). El script para la nube es `db/schema_render.sql`
+- Variables de entorno del backend: `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASS`
+- Variable del frontend: `VITE_API_URL=https://tu-backend.onrender.com/controllers`
+- Ya incluye `render.yaml` para desplegar todo con un Blueprint.

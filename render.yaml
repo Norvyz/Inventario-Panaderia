@@ -1,0 +1,47 @@
+# Blueprint de Render para el proyecto Panadería Inventario
+# Crea 2 servicios: backend PHP (Docker) + frontend React (Static Site)
+# Nota: la base de datos MySQL NO se puede crear aquí gratis en Render.
+#       Se configura con las variables DB_* apuntando a un MySQL externo (ver docs/DESPLIEGUE_RENDER.md).
+
+services:
+  # ============================================================
+  # BACKEND - API REST en PHP (runtime Docker)
+  # URL resultante: https://panaderia-backend.onrender.com
+  # ------------------------------------------------------------
+  - type: web
+    name: panaderia-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    region: oregon
+    healthCheckPath: /health.php
+    envVars:
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASS
+        sync: false
+      - key: DB_SSL
+        value: "false"
+
+  # Frontend React (Vite) como Static Site
+  - type: web
+    name: panaderia-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false # Ej: https://panaderia-backend.onrender.com/controllers
+    routes:
+      # SPA: cualquier ruta desconocida se sirve con index.html
+      - type: rewrite
+        source: /*
+        destination: /index.html
