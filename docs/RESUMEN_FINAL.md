@@ -21,7 +21,7 @@
 ## Stack
 - Frontend: React 19 + Vite + React Router + Axios
 - Backend: PHP 8 + PDO
-- BD: MySQL (XAMPP)
+- BD: Supabase (PostgreSQL)
 
 ## Demo
 - URL: http://localhost:5173

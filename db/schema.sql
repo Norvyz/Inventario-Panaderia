@@ -1,3 +1,10 @@
+-- ============================================================
+--  OBSOLETO (MySQL/XAMPP)
+--  Este archivo ya NO se usa. El proyecto ahora trabaja SOLO con
+--  Supabase (PostgreSQL). El script vigente es: db/schema_supabase.sql
+--  Se conserva únicamente como referencia histórica.
+-- ============================================================
+
 -- Base de datos: panaderia_inventario
 CREATE DATABASE IF NOT EXISTS panaderia_inventario
   CHARACTER SET utf8mb4

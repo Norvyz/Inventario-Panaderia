@@ -11,18 +11,20 @@ Se recomienda enfoque modular, incremental. Se divide en componentes reutilizabl
 
 ## 3. Ambientes
 ### Desarrollo (Local)
-- Servidor PHP: XAMPP (Apache + PHP) - http://localhost
-- Base de Datos: MySQL (XAMPP) - localhost:3306
+- Servidor PHP: XAMPP (solo Apache + PHP) - http://localhost
+- Base de Datos: Supabase (PostgreSQL en la nube) vía `DATABASE_URL`
 - Frontend: Vite/DevServer React (npm run dev) - http://localhost:5173
 - IDE: VSCode
 
 ### Pruebas
-- Base datos separada `panaderia_inventario_test` (opcional)
+- Base de datos: mismo proyecto de Supabase (o uno de pruebas aparte)
 - Pruebas unitarias (PHPUnit recomendado / JS Vitest)
 - Validaciones casos de uso
 
 ### Producción
-- Servidor web + MySQL
+- Backend: Render (Web Service con Docker)
+- Frontend: Render (Static Site)
+- Base de Datos: Supabase (PostgreSQL)
 - Compilar frontend (npm run build) -> servir estáticos
 
 ## 4. Librerías y Frameworks por capa
@@ -49,9 +51,9 @@ Se recomienda enfoque modular, incremental. Se divide en componentes reutilizabl
 
 ## 6. Configuración servidores y BD
 - Apache: configurar DocumentRoot para backend o usar rutas relativas
-- MySQL: ejecutar `db/schema.sql` en phpMyAdmin
+- Supabase: ejecutar `db/schema_supabase.sql` en el SQL Editor de Supabase
 - CORS: habilitado para desarrollo (ajustar en prod)
-- Variables: constantes en db.php (ajustables)
+- Variable de conexión: `DATABASE_URL` (variable de entorno en Render, o `backend/.env` en local)
 
 ## 7. Pruebas unitarias (recomendación)
 - Backend: PHPUnit para Services/Helpers

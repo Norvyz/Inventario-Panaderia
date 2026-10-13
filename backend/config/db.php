@@ -1,91 +1,90 @@
 <?php
-// Conexión a base de datos (soporta MySQL local y PostgreSQL en la nube)
+// ============================================================
+//  Conexión a la base de datos -> SUPABASE (PostgreSQL)
+//  Única base de datos del proyecto. No se usa MySQL ni XAMPP.
+// ============================================================
 //
-// - LOCAL (XAMPP): por defecto usa MySQL -> localhost / root / sin clave
-// - PRODUCCIÓN (Render + Supabase): si existe la variable DATABASE_URL, usa PostgreSQL
+//  ¿De dónde sale la conexión?
+//   - Producción (Render): variable de entorno DATABASE_URL
+//   - Local: archivo backend/.env con DATABASE_URL (ver backend/.env.example)
 //
-// Variables de entorno soportadas:
-//   DATABASE_URL  -> cadena de conexión completa de Supabase/Postgres (recomendado)
-//   DB_DRIVER     -> 'mysql' o 'pgsql' (se detecta solo si hay DATABASE_URL)
-//   DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS -> conexión por campos (opcional)
+//  La conexión local también apunta a Supabase, así que no hace falta
+//  levantar MySQL en XAMPP: solo necesitas Apache/PHP para servir el backend.
+// ============================================================
+
+// Carga simple de variables desde backend/.env (solo desarrollo local)
+cargarEnv(__DIR__ . '/../.env');
+
 header("Content-Type: application/json; charset=utf-8");
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
 
-$databaseUrl = getenv('DATABASE_URL');
-$driver = getenv('DB_DRIVER') ?: ($databaseUrl ? 'pgsql' : 'mysql');
-
-define('DB_DRIVER', $driver);
-define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
-define('DB_PORT', getenv('DB_PORT') ?: ($driver === 'pgsql' ? '5432' : '3306'));
-define('DB_NAME', getenv('DB_NAME') ?: ($driver === 'pgsql' ? 'postgres' : 'panaderia_inventario'));
-define('DB_USER', getenv('DB_USER') ?: ($driver === 'pgsql' ? 'postgres' : 'root'));
-define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : '');
-
-function getConnection() {
-    $options = [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    ];
-
-    if (DB_DRIVER === 'pgsql') {
-        $host = DB_HOST;
-        $port = DB_PORT;
-        $dbname = DB_NAME;
-        $user = DB_USER;
-        $pass = DB_PASS;
-
-        // Si viene la cadena completa (Supabase), la usamos
-        $url = getenv('DATABASE_URL');
-        if ($url) {
-            $p = parse_url($url);
-            if ($p === false || empty($p['host'])) {
-                http_response_code(500);
-                echo json_encode(["success" => false, "message" => "DATABASE_URL inválida"]);
-                exit();
-            }
-            $host = $p['host'];
-            $port = $p['port'] ?? 5432;
-            $dbname = isset($p['path']) ? ltrim($p['path'], '/') : 'postgres';
-            $user = isset($p['user']) ? urldecode($p['user']) : 'postgres';
-            $pass = isset($p['pass']) ? urldecode($p['pass']) : '';
+function cargarEnv($ruta) {
+    if (!is_readable($ruta)) {
+        return;
+    }
+    foreach (file($ruta, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        $line = trim($line);
+        if ($line === '' || $line[0] === '#' || strpos($line, '=') === false) {
+            continue;
         }
-
-        // Supabase exige SSL
-        $dsn = "pgsql:host=$host;port=$port;dbname=$dbname;sslmode=require";
-        // El pooler de Supabase no soporta prepared statements del servidor -> emulados
-        $options[PDO::ATTR_EMULATE_PREPARES] = true;
-
-        try {
-            return new PDO($dsn, $user, $pass, $options);
-        } catch (PDOException $e) {
-            http_response_code(500);
-            echo json_encode([
-                "success" => false,
-                "message" => "Error de conexión a PostgreSQL",
-                "error" => $e->getMessage()
-            ]);
-            exit();
+        [$clave, $valor] = explode('=', $line, 2);
+        $clave = trim($clave);
+        $valor = trim(trim($valor), "\"'");
+        // Las variables reales del sistema (Render) tienen prioridad sobre el .env local
+        if (getenv($clave) === false) {
+            putenv("$clave=$valor");
+            $_ENV[$clave] = $valor;
         }
     }
+}
 
-    // MySQL (XAMPP local)
-    $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=utf8mb4";
-    $options[PDO::ATTR_EMULATE_PREPARES] = false;
+function getConnection() {
+    $url = getenv('DATABASE_URL');
+
+    if (!$url) {
+        http_response_code(500);
+        echo json_encode([
+            "success" => false,
+            "message" => "Falta la variable DATABASE_URL (cadena de conexión de Supabase)"
+        ]);
+        exit();
+    }
+
+    $p = parse_url($url);
+    if ($p === false || empty($p['host'])) {
+        http_response_code(500);
+        echo json_encode(["success" => false, "message" => "DATABASE_URL inválida"]);
+        exit();
+    }
+
+    $host = $p['host'];
+    $port = $p['port'] ?? 5432;
+    $dbname = isset($p['path']) ? ltrim($p['path'], '/') : 'postgres';
+    $user = isset($p['user']) ? urldecode($p['user']) : 'postgres';
+    $pass = isset($p['pass']) ? urldecode($p['pass']) : '';
+
+    // Supabase exige SSL
+    $dsn = "pgsql:host=$host;port=$port;dbname=$dbname;sslmode=require";
 
     try {
-        return new PDO($dsn, DB_USER, DB_PASS, $options);
+        return new PDO($dsn, $user, $pass, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            // El pooler de Supabase no soporta prepared statements del servidor
+            PDO::ATTR_EMULATE_PREPARES => true,
+        ]);
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode([
             "success" => false,
-            "message" => "Error de conexión a base de datos",
+            "message" => "Error de conexión a Supabase",
             "error" => $e->getMessage() // Solo para desarrollo
         ]);
         exit();

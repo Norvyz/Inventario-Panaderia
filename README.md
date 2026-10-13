@@ -5,37 +5,43 @@ Sistema web para control de inventario, insumos, gastos, ventas y ganancias, con
 ## Tecnologías
 - Frontend: React + Vite + Axios
 - Backend: PHP 8+ (REST API, arquitectura por capas)
-- Base de Datos: MySQL (XAMPP)
+- Base de Datos: **Supabase (PostgreSQL)** — única base de datos del proyecto
+- Despliegue: Render (backend PHP en Docker + frontend estático)
 - Control versiones: Git
 
 ## Estructura
 - `docs/`: Documentación (requisitos, casos de uso, diagramas, metodología, ambientes)
-- `db/`: Schema SQL
+- `db/schema_supabase.sql`: Script de la base de datos (ejecutar en Supabase)
 - `backend/`: API PHP (config, controllers, services, models, helpers)
 - `frontend/`: App React
 
 ## Instalación rápida
-1. XAMPP -> iniciar Apache + MySQL
-2. phpMyAdmin -> importar `db/schema.sql` (crea `panaderia_inventario`)
-3. Backend: copiar carpeta `backend/` a `htdocs/` (o configurar virtualhost)
-4. Frontend: 
+1. Crear el proyecto en https://supabase.com
+2. SQL Editor -> ejecutar `db/schema_supabase.sql`
+3. Copiar `backend/.env.example` a `backend/.env` y pegar tu `DATABASE_URL` de Supabase
+4. Backend: copiar carpeta `backend/` a `htdocs/` (o usar un servidor PHP)
+4. Frontend:
    ```bash
    cd frontend
    npm install
    npm run dev
    ```
 
+> En XAMPP solo se usa **Apache + PHP** como servidor. La base de datos ya no es MySQL local.
+
 ## Credenciales demo
-- admin@panaderia.com / password (hash en schema)
+- admin@panaderia.com / password
 
 ## Conexión BD (sencilla)
-Ver `backend/config/db.php` - equivalente a `application.properties` pero en PHP.
+Ver `backend/config/db.php`. Se configura con **una sola variable**: `DATABASE_URL`.
+
 ```php
-define('DB_HOST','localhost');
-define('DB_NAME','panaderia_inventario');
-define('DB_USER','root');
-define('DB_PASS','');
+// Producción (Render): variable de entorno DATABASE_URL
+// Local: archivo backend/.env
+// postgresql://postgres:TU_PASSWORD@db.TU_PROYECTO.supabase.co:5432/postgres
 ```
+
+> Para pruebas locales contra Supabase, habilita `extension=pdo_pgsql` en el `php.ini` de PHP (viene desactivada por defecto en XAMPP).
 
 ## Endpoints básicos
 - POST /authController.php -> login
@@ -53,8 +59,8 @@ Ver guías completas en `docs/DESPLIEGUE_RENDER.md` y `docs/CONEXION_SUPABASE.md
 Resumen:
 - **Frontend**: Render Static Site (Root `frontend`, build `npm run build`, publish `dist`)
 - **Backend**: Render Web Service con **Docker** (`backend/Dockerfile`), porque Render no corre PHP nativo
-- **Base de datos**: **Supabase (PostgreSQL)**. El script a ejecutar en Supabase es `db/schema_supabase.sql`
-- El backend funciona con **MySQL local** (XAMPP) y con **PostgreSQL** en la nube (según exista `DATABASE_URL`)
+- **Base de datos**: **Supabase (PostgreSQL)**, la única. El script a ejecutar es `db/schema_supabase.sql`
+- El backend siempre usa PostgreSQL (Supabase), tanto local como en producción
 - Variable de entorno del backend: `DATABASE_URL` (cadena de conexión de Supabase)
 - Variable del frontend: `VITE_API_URL=https://tu-backend.onrender.com/controllers`
 - Incluye `render.yaml` para desplegar todo con un Blueprint

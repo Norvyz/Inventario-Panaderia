@@ -23,7 +23,7 @@ packageDiagram
   }
   
   frontend --> backend : HTTP/REST
-  backend --> db : PDO/MySQL
+  backend --> db : PDO/PostgreSQL (Supabase)
 ```
 
 ## 2. Diagrama de Clases (Simplificado)
@@ -91,7 +91,7 @@ flowchart TD
   B --> C[Controladores]
   C --> D[Servicios]
   D --> E[Modelos]
-  E --> F[(MySQL XAMPP)]
+  E --> F[(Supabase PostgreSQL)]
 ```
 
 ## 4. Mapa de Navegación
@@ -112,7 +112,7 @@ flowchart LR
 - **Capa Negocio/Lógica**: PHP Services
 - **Capa Datos**: PHP Models + PDO
 - **Capa Configuración**: db.php
-- **Persistencia**: MySQL
+- **Persistencia**: PostgreSQL (Supabase)
 
 ## 6. Seguridad (Mecanismos)
 - Autenticación por sesiones PHP

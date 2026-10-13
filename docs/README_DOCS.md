@@ -20,12 +20,12 @@ Este proyecto cumple con todos los ítems solicitados:
 
 ## Quick Start
 
-1. Iniciar XAMPP (Apache + MySQL)
-2. Importar `db/schema.sql` en phpMyAdmin
+1. Crear proyecto en Supabase y ejecutar `db/schema_supabase.sql` en el SQL Editor
+2. Crear `backend/.env` con `DATABASE_URL` (cadena de conexión de Supabase)
 3. Backend PHP: colocar en htdocs o usar servidor PHP
-4. Frontend React: `npm create vite@latest frontend -- --template react` o usar estructura creada
-5. Conectar frontend a `http://localhost/.../backend/controllers/...`
+4. Frontend React: `cd frontend && npm install && npm run dev`
+5. Conectar frontend a la API con `VITE_API_URL`
 
 ## Notas
-La conexión PHP es intencionalmente **sencilla** (como pedías, sin mucho boilerplate). Revisar `backend/config/db.php`.
-Base: `panaderia_inventario`, user `root`, pass vacía.
+La conexión PHP es intencionalmente **sencilla** (sin mucho boilerplate). Revisar `backend/config/db.php`.
+La **única** base de datos es **Supabase (PostgreSQL)**; se configura con la variable `DATABASE_URL`.

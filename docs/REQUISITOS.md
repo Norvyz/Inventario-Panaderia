@@ -24,7 +24,7 @@ Desarrollar un sistema web para el control de inventario, insumos, gastos, venta
 - RF10: Alertas de stock bajo
 
 ## 4. Requerimientos no funcionales
-- RNF01: Tecnologías: React, HTML, JS, PHP, MySQL (XAMPP)
+- RNF01: Tecnologías: React, HTML, JS, PHP, PostgreSQL (Supabase)
 - RNF02: Arquitectura por capas
 - RNF03: Conexión sencilla a BD
 - RNF04: Código claro y comentado siguiendo buenas prácticas

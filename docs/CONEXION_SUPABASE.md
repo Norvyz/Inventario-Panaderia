@@ -1,6 +1,6 @@
 # Conexión con Supabase (PostgreSQL)
 
-Supabase entrega una **cadena de conexión** (no usuario/clave por separado, aunque también sirve).
+Supabase es la **única** base de datos del proyecto. Entrega una **cadena de conexión**.
 
 ## Formato
 
@@ -18,35 +18,43 @@ postgresql://postgres:TU_PASSWORD@db.TU_PROYECTO.supabase.co:5432/postgres
 
 ## Cómo pasarla al backend
 
-**Solo como variable de entorno** (nunca en el código ni en el repo):
+El backend lee **solo** la variable `DATABASE_URL`.
 
-- **Local (opcional):** crear `backend/.env` no aplica porque PHP no lo lee solo;
-  para probar local con Supabase se puede definir la variable en el sistema.
-- **Render:** en el servicio del backend, sección **Environment**:
-  ```
-  DATABASE_URL = postgresql://postgres:TU_PASSWORD@db.TU_PROYECTO.supabase.co:5432/postgres
-  ```
+### En producción (Render)
+En el servicio del backend, sección **Environment**:
+```
+DATABASE_URL = postgresql://postgres:TU_PASSWORD@db.TU_PROYECTO.supabase.co:5432/postgres
+```
+
+### En local (opcional)
+1. Copia `backend/.env.example` como `backend/.env`.
+2. Pega tu cadena:
+   ```
+   DATABASE_URL=postgresql://postgres:TU_PASSWORD@db.TU_PROYECTO.supabase.co:5432/postgres
+   ```
+3. Habilita la extensión PostgreSQL en el `php.ini` de XAMPP (viene desactivada):
+   - Busca `;extension=pdo_pgsql` y `;extension=pgsql`
+   - Quita el `;` de ambas y reinicia Apache
+
+> `backend/.env` **no se sube a Git** (ya está en `.gitignore`).
 
 ## ¿Pooler o conexión directa?
 
 | Conexión | Puerto | Cuándo usarla |
 |---|---|---|
 | Directa | `5432` | Simple, pocas conexiones |
-| Pooler (Session) | `5432` (host `pooler.supabase.com`) | Recomendada si hay problemas de red/IPv6 |
-| Pooler (Transaction) | `6543` | Muchas conexiones; el backend ya usa sentencias emuladas, así que funciona |
+| Pooler (Session) | `5432` (host `pooler.supabase.com`) | Si hay problemas de red/IPv6 |
+| Pooler (Transaction) | `6543` | Muchas conexiones |
 
-El backend ya está configurado con `PDO::ATTR_EMULATE_PREPARES = true` en PostgreSQL,
-por lo que **funciona con las tres formas**.
+El backend usa `PDO::ATTR_EMULATE_PREPARES = true`, por lo que **funciona con las tres**.
 
 ## Seguridad
 
-- La contraseña **nunca** debe subirse al repositorio.
+- La contraseña **nunca** se sube al repositorio.
 - En el repo solo existe `backend/.env.example` como plantilla.
 - En Render, `DATABASE_URL` se define con `sync: false` (no queda en `render.yaml`).
-- Supabase tiene su propio control de acceso (RLS); para este caso el backend
-  entra como `postgres`, que tiene acceso total.
 
 ## Nota sobre el plan Free de Supabase
 
-Los proyectos Free se **pausan tras ~7 días sin actividad**. Para una práctica
-suele ser suficiente; si se pausa, entra al panel de Supabase y reactívalo.
+Los proyectos Free se **pausan tras ~7 días sin actividad**. Si se pausa, entra al
+panel de Supabase y reactívalo.

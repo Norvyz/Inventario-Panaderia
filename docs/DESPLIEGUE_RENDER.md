@@ -15,10 +15,9 @@ Usuario
           └── PostgreSQL (Supabase) -> se conecta con la variable DATABASE_URL
 ```
 
-> **Importante:** Supabase usa **PostgreSQL**, no MySQL. El backend ya fue adaptado
-> para funcionar con ambos:
-> - **Local (XAMPP):** MySQL (no cambia nada)
-> - **Producción (Render):** PostgreSQL cuando existe la variable `DATABASE_URL`
+> **Importante:** la **única** base de datos del proyecto es **Supabase (PostgreSQL)**.
+> Render solo hospeda el backend (PHP) y el frontend; **la base de datos NO vive en Render**.
+> El backend se conecta a Supabase con la variable `DATABASE_URL`, igual en local y en producción.
 
 ---
 
@@ -121,17 +120,17 @@ Si algo falla:
 
 ## Cómo funciona la conexión (resumen técnico)
 
-`backend/config/db.php` decide el motor así:
+`backend/config/db.php` se conecta siempre a **Supabase (PostgreSQL)**:
 
 ```php
-$databaseUrl = getenv('DATABASE_URL');
-$driver = getenv('DB_DRIVER') ?: ($databaseUrl ? 'pgsql' : 'mysql');
+$url = getenv('DATABASE_URL'); // en Render viene del panel de Environment
+// local: se lee desde backend/.env
 ```
 
-- Si hay `DATABASE_URL` → **PostgreSQL** (Supabase), con `sslmode=require`.
-- Si no → **MySQL** (XAMPP local).
-- Los `INSERT` que necesitan el id usan `backend/helpers/database.php`,
-  que añade `RETURNING id` en PostgreSQL y `lastInsertId()` en MySQL.
+- DSN: `pgsql:host=...;port=5432;dbname=postgres;sslmode=require`
+- Se usa `PDO::ATTR_EMULATE_PREPARES = true` para funcionar con el pooler de Supabase.
+- Los `INSERT` que necesitan el id usan `backend/helpers/database.php`
+  (`INSERT ... RETURNING id`).
 
 ---
 
@@ -139,11 +138,12 @@ $driver = getenv('DB_DRIVER') ?: ($databaseUrl ? 'pgsql' : 'mysql');
 
 | Archivo | Para qué sirve |
 |---|---|
-| `backend/Dockerfile` | Render no corre PHP nativo; esto sí se lo permite (incluye pdo_mysql y pdo_pgsql) |
+| `backend/Dockerfile` | Render no corre PHP nativo; esto sí se lo permite (incluye pdo_pgsql) |
 | `backend/.dockerignore` | Evita copiar `.env` y basura al contenedor |
 | `backend/health.php` | Endpoint de salud para Render |
-| `backend/config/db.php` | Lee `DATABASE_URL` / variables de entorno |
-| `backend/helpers/database.php` | `INSERT ... RETURNING id` compatible con ambos motores |
+| `backend/.env.example` | Plantilla de `DATABASE_URL` para desarrollo local |
+| `backend/config/db.php` | Lee `DATABASE_URL` (Supabase) |
+| `backend/helpers/database.php` | `INSERT ... RETURNING id` (PostgreSQL) |
 | `render.yaml` | Define los 2 servicios automáticamente |
 | `db/schema_supabase.sql` | Script PostgreSQL para ejecutar en Supabase |
 | `frontend/.env.example` | Plantilla de `VITE_API_URL` |
