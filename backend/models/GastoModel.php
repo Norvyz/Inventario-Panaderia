@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../helpers/database.php';
+
 class GastoModel {
     private $pdo;
     public function __construct($pdo) {
@@ -10,15 +12,13 @@ class GastoModel {
     }
     public function create($data) {
         $sql = "INSERT INTO gastos (id_categoria, descripcion, monto, fecha_gasto, id_usuario, fecha_creacion) VALUES (?,?,?,?,?,NOW())";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([
+        return insertarYRetornarId($this->pdo, $sql, [
             $data['id_categoria'],
             $data['descripcion'] ?? null,
             $data['monto'],
             $data['fecha_gasto'],
             $data['id_usuario'] ?? null
         ]);
-        return $this->pdo->lastInsertId();
     }
 }
 ?>

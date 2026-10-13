@@ -1,8 +1,11 @@
 # Imagen oficial de PHP 8.2 con Apache
 FROM php:8.2-apache
 
-# Extensión PDO MySQL (la que usa config/db.php)
-RUN docker-php-ext-install pdo pdo_mysql
+# Extensiones PDO: MySQL (local) y PostgreSQL (Supabase en la nube)
+RUN apt-get update \
+    && apt-get install -y libpq-dev \
+    && docker-php-ext-install pdo pdo_mysql pdo_pgsql \
+    && rm -rf /var/lib/apt/lists/*
 
 # Apache: permitir PATH_INFO (URLs tipo /insumoController.php/5)
 RUN printf 'AcceptPathInfo On\n' > /etc/apache2/conf-available/pathinfo.conf \

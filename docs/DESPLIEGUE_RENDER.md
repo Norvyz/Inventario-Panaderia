@@ -1,6 +1,7 @@
-# Despliegue en Render
+# Despliegue en Render + Supabase
 
-Esta guía deja el proyecto publicado gratis en [Render](https://render.com).
+Guía para publicar el proyecto gratis en [Render](https://render.com) usando
+**Supabase** (PostgreSQL) como base de datos.
 
 ## Arquitectura final
 
@@ -11,40 +12,38 @@ Usuario
   │
   └── Backend PHP + Apache (Docker en Render)    -> https://panaderia-backend.onrender.com
           │
-          └── MySQL externo (Render no da MySQL gratis) -> proveedor gratuito
+          └── PostgreSQL (Supabase) -> se conecta con la variable DATABASE_URL
 ```
 
-## ⚠️ Punto clave: la base de datos
-
-**Render NO ofrece MySQL gratis.** Sus bases de datos gratis son **PostgreSQL** y además **expiran a los 30 días**.
-
-Por lo tanto, para seguir usando MySQL (y no reescribir el proyecto) necesitas un **MySQL gratuito externo**. Opciones:
-
-| Proveedor | Gratis | Notas |
-|---|---|---|
-| **db4free.net** | Sí | MySQL 8, rápido de crear, conexión directa. Ideal para prácticas |
-| **freedb.tech** | Sí | MySQL, sin expiración |
-| **Aiven** | Sí (plan free) | Requiere activar SSL (`DB_SSL=true`) |
-| **TiDB Cloud Serverless** | Sí | Compatible MySQL, requiere SSL |
-
-> **Alternativa:** si tu instructor acepta PostgreSQL, se puede migrar el proyecto a `pdo_pgsql` y usar la BD gratis de Render (pero expira en 30 días).
-
-En esta guía usaremos **db4free.net** como ejemplo (es el más simple para practicar).
+> **Importante:** Supabase usa **PostgreSQL**, no MySQL. El backend ya fue adaptado
+> para funcionar con ambos:
+> - **Local (XAMPP):** MySQL (no cambia nada)
+> - **Producción (Render):** PostgreSQL cuando existe la variable `DATABASE_URL`
 
 ---
 
-## Paso 1 – Crear la base de datos MySQL gratuita
+## Paso 1 – Crear la base de datos en Supabase
 
-1. Entra a https://www.db4free.net y crea una cuenta.
-2. Anota los datos que te dan:
-   - Host (ej: `db4free.net`)
-   - Base de datos (ej: `panaderia_norvy`)
-   - Usuario
-   - Contraseña
-   - Puerto: `3306`
-3. Abre phpMyAdmin (te dan un enlace) o usa **MySQL Workbench** y conéctate con esos datos.
-4. Ejecuta el script **`db/schema_render.sql`** (el que NO tiene `CREATE DATABASE`, porque el proveedor ya te dio la base).
-5. Verifica: `SELECT * FROM usuarios;` debe mostrar el admin.
+1. Entra a https://supabase.com y crea un proyecto (plan Free).
+2. Espera a que termine de crear la base.
+3. Ve a **SQL Editor** → **New query**.
+4. Pega y ejecuta todo el contenido de **`db/schema_supabase.sql`**.
+   - Esto crea las tablas y los datos demo (admin + productos).
+5. Verifica que aparezcan las tablas en **Table Editor**.
+
+### Obtener la cadena de conexión
+1. En Supabase ve a **Project Settings** → **Database**.
+2. Busca **Connection string** → pestaña **URI**.
+3. Copia algo parecido a:
+   ```
+   postgresql://postgres:TU_PASSWORD@db.xxxxxxxx.supabase.co:5432/postgres
+   ```
+4. Reemplaza `[YOUR-PASSWORD]` por la contraseña real de tu base.
+5. Esa cadena es la que irá en la variable **`DATABASE_URL`**.
+
+> **Si tu contraseña tiene caracteres raros** (`@`, `#`, `/`, etc.), usa el
+> **Connection Pooler** de Supabase (botón "Connect" → "Pooler" → modo *Session*),
+> o codifica la contraseña con "URL encode". El backend soporta el pooler sin problema.
 
 ---
 
@@ -55,21 +54,13 @@ En esta guía usaremos **db4free.net** como ejemplo (es el más simple para prac
 1. Sube los cambios a GitHub:
    ```bash
    git add .
-   git commit -m "Preparar despliegue en Render (Dockerfile, render.yaml, env vars)"
+   git commit -m "Soporte PostgreSQL (Supabase) para Render"
    git push
    ```
-2. En Render: **New +** → **Blueprint**.
-3. Conecta el repo `Norvyz/Inventario-para-una-panader-a-`.
-4. Render leerá `render.yaml` y creará los 2 servicios.
-5. Cuando pida las variables del backend, ingresa:
-   ```
-   DB_HOST=db4free.net
-   DB_PORT=3306
-   DB_NAME=tu_base
-   DB_USER=tu_usuario
-   DB_PASS=tu_contraseña
-   ```
-6. Espera el deploy. Prueba:
+2. En Render: **New +** → **Blueprint** → conecta el repo.
+3. Render creará los 2 servicios definidos en `render.yaml`.
+4. Cuando pida el valor de `DATABASE_URL`, pega la cadena de Supabase.
+5. Espera el deploy y prueba:
    ```
    https://panaderia-backend.onrender.com/health.php
    ```
@@ -77,39 +68,39 @@ En esta guía usaremos **db4free.net** como ejemplo (es el más simple para prac
 
 ### Opción B – Manual (Web Service)
 
-1. Render: **New +** → **Web Service**.
-2. Conecta el repo.
-3. Configura:
+1. Render: **New +** → **Web Service** → conecta el repo.
+2. Configura:
    - **Language:** Docker
    - **Root Directory:** `backend`
-   - **Dockerfile Path:** `backend/Dockerfile` (o `Dockerfile` si el root es `backend`)
+   - **Dockerfile Path:** `Dockerfile`
    - **Instance Type:** Free
    - **Health Check Path:** `/health.php`
-4. En **Environment**, agrega `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASS`.
-5. Deploy.
+3. En **Environment** agrega:
+   ```
+   DATABASE_URL = postgresql://postgres:TU_PASSWORD@db.xxxx.supabase.co:5432/postgres
+   ```
+4. Deploy.
 
-> **Nota Render Free:** el servicio "duerme" tras 15 min sin uso y tarda ~1 min en despertar en la primera petición.
+> **Render Free:** el servicio "duerme" tras 15 min sin uso y tarda ~1 min en despertar.
 
 ---
 
 ## Paso 3 – Publicar el frontend (React)
 
-1. Render: **New +** → **Static Site**.
-2. Conecta el mismo repo.
-3. Configura:
+1. Render: **New +** → **Static Site** → conecta el mismo repo.
+2. Configura:
    - **Root Directory:** `frontend`
    - **Build Command:** `npm install && npm run build`
    - **Publish Directory:** `dist`
-4. En **Environment**, agrega:
+3. En **Environment** agrega (con la URL real de tu backend + `/controllers`):
    ```
    VITE_API_URL=https://panaderia-backend.onrender.com/controllers
    ```
-   (usa la URL real de tu backend + `/controllers`)
-5. En **Redirects/Rewrites**, agrega una regla para que funcione React Router:
+3. En **Redirects/Rewrites** agrega (para que funcione React Router):
    - **Source:** `/*`
    - **Destination:** `/index.html`
    - **Action:** Rewrite
-6. Deploy. Abre la URL del frontend y prueba el login.
+4. Deploy. Abre la URL del frontend y prueba el login.
 
 ---
 
@@ -121,19 +112,38 @@ En esta guía usaremos **db4free.net** como ejemplo (es el más simple para prac
 
 Si algo falla:
 - Revisa los **Logs** del servicio en Render.
-- Verifica que `VITE_API_URL` termine en `/controllers`.
+- Verifica que `DATABASE_URL` esté bien pegada (sin `[ ]`).
 - Verifica que el backend responda `/health.php`.
+- Prueba un endpoint directo:
+  `https://panaderia-backend.onrender.com/controllers/dashboardController.php`
 
 ---
 
-## Resumen de archivos agregados para Render
+## Cómo funciona la conexión (resumen técnico)
+
+`backend/config/db.php` decide el motor así:
+
+```php
+$databaseUrl = getenv('DATABASE_URL');
+$driver = getenv('DB_DRIVER') ?: ($databaseUrl ? 'pgsql' : 'mysql');
+```
+
+- Si hay `DATABASE_URL` → **PostgreSQL** (Supabase), con `sslmode=require`.
+- Si no → **MySQL** (XAMPP local).
+- Los `INSERT` que necesitan el id usan `backend/helpers/database.php`,
+  que añade `RETURNING id` en PostgreSQL y `lastInsertId()` en MySQL.
+
+---
+
+## Archivos agregados para el despliegue
 
 | Archivo | Para qué sirve |
 |---|---|
-| `backend/Dockerfile` | Render no corre PHP nativo; esto sí se lo permite |
+| `backend/Dockerfile` | Render no corre PHP nativo; esto sí se lo permite (incluye pdo_mysql y pdo_pgsql) |
 | `backend/.dockerignore` | Evita copiar `.env` y basura al contenedor |
 | `backend/health.php` | Endpoint de salud para Render |
-| `backend/config/db.php` | Ahora lee variables de entorno (local y nube) |
+| `backend/config/db.php` | Lee `DATABASE_URL` / variables de entorno |
+| `backend/helpers/database.php` | `INSERT ... RETURNING id` compatible con ambos motores |
 | `render.yaml` | Define los 2 servicios automáticamente |
-| `db/schema_render.sql` | Script sin `CREATE DATABASE` para la nube |
+| `db/schema_supabase.sql` | Script PostgreSQL para ejecutar en Supabase |
 | `frontend/.env.example` | Plantilla de `VITE_API_URL` |

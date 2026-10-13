@@ -1,36 +1,23 @@
 # Blueprint de Render para el proyecto Panadería Inventario
 # Crea 2 servicios: backend PHP (Docker) + frontend React (Static Site)
-# Nota: la base de datos MySQL NO se puede crear aquí gratis en Render.
-#       Se configura con las variables DB_* apuntando a un MySQL externo (ver docs/DESPLIEGUE_RENDER.md).
+# La base de datos es PostgreSQL de Supabase, conectada con la variable DATABASE_URL.
 
 services:
-  # ============================================================
-  # BACKEND - API REST en PHP (runtime Docker)
-  # URL resultante: https://panaderia-backend.onrender.com
-  # ------------------------------------------------------------
+  # Backend PHP (API REST) -> https://panaderia-backend.onrender.com
   - type: web
     name: panaderia-backend
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     plan: free
-    region: oregon
     healthCheckPath: /health.php
     envVars:
-      - key: DB_HOST
+      # Cadena de conexión de Supabase (Project Settings -> Database -> Connection string -> URI)
+      # Al crearlo, deja "sync: false" y pega el valor en el panel de Render (NO se sube al repo).
+      - key: DATABASE_URL
         sync: false
-      - key: DB_PORT
-        value: "3306"
-      - key: DB_NAME
-        sync: false
-      - key: DB_USER
-        sync: false
-      - key: DB_PASS
-        sync: false
-      - key: DB_SSL
-        value: "false"
 
-  # Frontend React (Vite) como Static Site
+  # Frontend React (Static Site) -> https://panaderia-frontend.onrender.com
   - type: web
     name: panaderia-frontend
     runtime: static
@@ -38,8 +25,9 @@ services:
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
     envVars:
+      # Ej: https://panaderia-backend.onrender.com/controllers
       - key: VITE_API_URL
-        sync: false # Ej: https://panaderia-backend.onrender.com/controllers
+        sync: false
     routes:
       # SPA: cualquier ruta desconocida se sirve con index.html
       - type: rewrite

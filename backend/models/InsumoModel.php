@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../helpers/database.php';
+
 class InsumoModel {
     private $pdo;
 
@@ -22,8 +24,7 @@ class InsumoModel {
     public function create($data) {
         $sql = "INSERT INTO insumos (codigo, nombre, unidad_medida, stock_actual, stock_minimo, precio_unitario, fecha_creacion)
                 VALUES (?, ?, ?, ?, ?, ?, NOW())";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([
+        return insertarYRetornarId($this->pdo, $sql, [
             $data['codigo'],
             $data['nombre'],
             $data['unidad_medida'],
@@ -31,7 +32,6 @@ class InsumoModel {
             $data['stock_minimo'],
             $data['precio_unitario']
         ]);
-        return $this->pdo->lastInsertId();
     }
 
     public function update($id, $data) {
